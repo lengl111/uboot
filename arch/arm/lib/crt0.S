@@ -64,26 +64,26 @@ ENTRY(_main)
 #if defined(CONFIG_SPL_BUILD) && defined(CONFIG_SPL_STACK)
 	ldr	sp, =(CONFIG_SPL_STACK)
 #else
-	ldr	sp, =(CONFIG_SYS_INIT_SP_ADDR)
+	ldr	sp, =(CONFIG_SYS_INIT_SP_ADDR) @0x30000000+0x4000000+0x1000000 = 0x35000000
 #endif
 	bic	sp, sp, #7	/* 8-byte alignment for ABI compliance */
 	mov	r2, sp
-	sub	sp, sp, #GD_SIZE	/* allocate one GD above SP */
+	sub	sp, sp, #GD_SIZE	/* allocate one GD above SP */  @ 在栈上分配200个字节存GD结构
 	bic	sp, sp, #7	/* 8-byte alignment for ABI compliance */
 	mov	r9, sp		/* GD is above SP */
 	mov	r1, sp
 	mov	r0, #0
 clr_gd:
 	cmp	r1, r2			/* while not at end of GD */
-	strlo	r0, [r1]		/* clear 32-bit GD word */
-	addlo	r1, r1, #4		/* move to next */
+	strlo	r0, [r1]		/* clear 32-bit GD word */ @清除所有GD数据结构为0，sp小于0x3500000，就加4
+	addlo	r1, r1, #4		/* move to next */ 
 	blo	clr_gd
 #if defined(CONFIG_SYS_MALLOC_F_LEN)
-	sub	sp, sp, #CONFIG_SYS_MALLOC_F_LEN
-	str	sp, [r9, #GD_MALLOC_BASE]
+	sub	sp, sp, #CONFIG_SYS_MALLOC_F_LEN  @ sp-0x200
+	str	sp, [r9, #GD_MALLOC_BASE]  @148个字节
 #endif
 	/* mov r0, #0 not needed due to above code */
-	bl	board_init_f
+	bl	board_init_f  @完成内存,串口等相关的硬件的初始化
 
 #if ! defined(CONFIG_SPL_BUILD)
 
@@ -98,9 +98,9 @@ clr_gd:
 	ldr	r9, [r9, #GD_BD]		/* r9 = gd->bd */
 	sub	r9, r9, #GD_SIZE		/* new GD is below bd */
 
-	adr	lr, here
+	adr	lr, here               @adr 可以去取位置无关代码,根据pc相对偏移得出,这里就是取出here的位置无关代码
 	ldr	r0, [r9, #GD_RELOC_OFF]		/* r0 = gd->reloc_off */
-	add	lr, lr, r0
+	add	lr, lr, r0               @根据重定位之后的偏移量计算重定位后here的位置,这样重定位完切换到DRAM中当前地址运行
 	ldr	r0, [r9, #GD_RELOCADDR]		/* r0 = gd->relocaddr */
 	b	relocate_code
 here:

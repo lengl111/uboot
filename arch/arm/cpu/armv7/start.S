@@ -33,7 +33,7 @@
 	.globl	reset
 
 reset:
-	bl	save_boot_params
+	bl	save_boot_params  @这里save_boot_params函数目前什么也没做，就跳回来了.
 	/*
 	 * disable interrupts (FIQ and IRQ), also set the cpu to SVC32 mode,
 	 * except if in HYP mode already
@@ -54,12 +54,12 @@ reset:
 #if !(defined(CONFIG_OMAP44XX) && defined(CONFIG_SPL_BUILD))
 	/* Set V=0 in CP15 SCTRL register - for VBAR to point to vector */
 	mrc	p15, 0, r0, c1, c0, 0	@ Read CP15 SCTRL Register
-	bic	r0, #CR_V		@ V = 0
+	bic	r0, #CR_V		@ V = 0  bit13:设置V位，选定异常向量表在0地址开始而不是0xffff000开始.
 	mcr	p15, 0, r0, c1, c0, 0	@ Write CP15 SCTRL Register
 
 	/* Set vector address in CP15 VBAR register */
 	ldr	r0, =_start
-	mcr	p15, 0, r0, c12, c0, 0	@Set VBAR
+	mcr	p15, 0, r0, c12, c0, 0	@Set VBAR 设置异常向量基地址寄存器
 #endif
 
 	/* the mask ROM code should have PLL and others stable */
@@ -113,7 +113,7 @@ ENTRY(cpu_init_cp15)
 	 * Invalidate L1 I/D
 	 */
 	mov	r0, #0			@ set up for MCR
-	mcr	p15, 0, r0, c8, c7, 0	@ invalidate TLBs
+	mcr	p15, 0, r0, c8, c7, 0	@ invalidate TLBs 关闭 I/D--TLB 
 	mcr	p15, 0, r0, c7, c5, 0	@ invalidate icache
 	mcr	p15, 0, r0, c7, c5, 6	@ invalidate BP array
 	mcr     p15, 0, r0, c7, c10, 4	@ DSB

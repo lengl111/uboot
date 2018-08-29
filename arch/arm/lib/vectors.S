@@ -33,7 +33,7 @@
  *************************************************************************
  */
 
-	.section ".vectors", "ax"
+	.section ".vectors", "ax"    @告诉gcc让链接器把下面代码放在 .vectors 段，这个可以在链接脚本中看到。ax—— 可分配，可执行
 
 /*
  *************************************************************************
@@ -42,18 +42,19 @@
  *
  * Uses indirect branch to allow reaching handlers anywhere in memory.
  *
+ * 像arm参考手册中描述的异常向量用间接分支来允许在内存中任何地方都能访问到处理函数。
  *************************************************************************
  */
 
-_start:
+_start:                   @根据u-boot.lds _start 是整个u-boot的入口，起始点
 
 #ifdef CONFIG_SYS_DV_NOR_BOOT_CFG
 	.word	CONFIG_SYS_DV_NOR_BOOT_CFG
 #endif
 
-	b	reset
-	ldr	pc, _undefined_instruction
-	ldr	pc, _software_interrupt
+	b	reset              @_start 属于BL1最开始允许的点，开机后直接跳入reset
+	ldr	pc, _undefined_instruction    @当对应的异常产生时，cpu会调到对应的向量地址，通过ldr 把对应异常处理的实际函数放入pc，
+	ldr	pc, _software_interrupt       @进而下一步进入异常处理之中。
 	ldr	pc, _prefetch_abort
 	ldr	pc, _data_abort
 	ldr	pc, _not_used
@@ -86,7 +87,7 @@ _not_used:		.word not_used
 _irq:			.word irq
 _fiq:			.word fiq
 
-	.balignl 16,0xdeadbeef
+	.balignl 16,0xdeadbeef  @当前内存以16的整数倍对齐，多出的内存用0xdeadbeef, 4字节填充.
 
 /*
  *************************************************************************
@@ -100,7 +101,7 @@ _fiq:			.word fiq
 
 #ifdef CONFIG_SPL_BUILD
 
-	.align	5
+	.align	5   @2^5 = 32 字节对齐
 undefined_instruction:
 software_interrupt:
 prefetch_abort:
@@ -167,15 +168,15 @@ FIQ_STACK_START:
 
 	.macro	bad_save_user_regs
 	@ carve out a frame on current user stack
-	sub	sp, sp, #S_FRAME_SIZE
-	stmia	sp, {r0 - r12}	@ Save user registers (now in svc mode) r0-r12
-	ldr	r2, IRQ_STACK_START_IN
+	sub	sp, sp, #S_FRAME_SIZE    @ sp= sp -72
+	stmia	sp, {r0 - r12}	@ Save user registers (now in svc mode) r0-r12 保存r0-r12到sp指向的内存地址
+	ldr	r2, IRQ_STACK_START_IN  @ r2的值要等运行时重新计算irq-stack 的实际值(interrupt.c中能找到),不是0x0badc0de
 	@ get values for "aborted" pc and cpsr (into parm regs)
-	ldmia	r2, {r2 - r3}
-	add	r0, sp, #S_FRAME_SIZE		@ grab pointer to old stack
-	add	r5, sp, #S_SP
+	ldmia	r2, {r2 - r3} @上面实际运行时IRQ_STACK 中会保存异常时pc和cpsr
+	add	r0, sp, #S_FRAME_SIZE		@ grab pointer to old stack r0=原来sp的值
+	add	r5, sp, #S_SP               @ r5 = sp+52
 	mov	r1, lr
-	stmia	r5, {r0 - r3}	@ save sp_SVC, lr_SVC, pc, cpsr
+	stmia	r5, {r0 - r3}	@ save sp_SVC, lr_SVC, pc, cpsr  (保存sp,lr,pc,cpsr到sp+52)
 	mov	r0, sp		@ save current stack into r0 (param register)
 	.endm
 

@@ -811,22 +811,22 @@ static init_fnc_t init_sequence_f[] = {
 #ifdef CONFIG_SANDBOX
 	setup_ram_buf,
 #endif
-	setup_mon_len,
-	setup_fdt,
+	setup_mon_len, //计算整个u-boot的长度
+	setup_fdt,  //fix 设备树的存放位置设置，arm不用管它会通过链接脚本搞定
 #ifdef CONFIG_TRACE
 	trace_early_init,
 #endif
-	initf_malloc,
+	initf_malloc, //初始化malloc相关的全局数据
 #if defined(CONFIG_MPC85xx) || defined(CONFIG_MPC86xx)
 	/* TODO: can this go into arch_cpu_init()? */
 	probecpu,
 #endif
 	arch_cpu_init,		/* basic arch cpu dependent setup */
-	mark_bootstage,
+	mark_bootstage,    //标记boot阶段
 #ifdef CONFIG_OF_CONTROL
 	fdtdec_check_fdt,
 #endif
-	initf_dm,
+	initf_dm,  //驱动模型相关，结合设备树
 #if defined(CONFIG_BOARD_EARLY_INIT_F)
 	board_early_init_f,
 #endif
@@ -841,7 +841,7 @@ static init_fnc_t init_sequence_f[] = {
 	init_timebase,
 #endif
 #if defined(CONFIG_ARM) || defined(CONFIG_MIPS) || defined(CONFIG_BLACKFIN)
-	timer_init,		/* initialize timer */
+	timer_init,		/* initialize timer */ //该接口应该由平台或者板级的代码实现，初始化成功后，u-boot会通过其它的API获取当前的timestamp
 #endif
 #ifdef CONFIG_SYS_ALLOC_DPRAM
 #if !defined(CONFIG_CPM2)
@@ -904,7 +904,7 @@ static init_fnc_t init_sequence_f[] = {
 	announce_dram_init,
 	/* TODO: unify all these dram functions? */
 #if defined(CONFIG_ARM) || defined(CONFIG_X86)
-	dram_init,		/* configure available RAM banks */
+	dram_init,		/* configure available RAM banks *///内存初始化，应该由平台实现
 #endif
 #if defined(CONFIG_MIPS) || defined(CONFIG_PPC)
 	init_func_ram,
@@ -1011,11 +1011,12 @@ void board_init_f(ulong boot_flags)
 	 */
 	zero_global_data();
 #endif
-
-	gd->flags = boot_flags;
+	//这里的gd 是根据  #define DECLARE_GLOBAL_DATA_PTR     register volatile gd_t *gd asm ("r9")
+	//r9是存放在栈空间上gd数据结构的位置
+	gd->flags = boot_flags; //boot_flags 通过r0传递过来等于0
 	gd->have_console = 0;
 
-	if (initcall_run_list(init_sequence_f))
+	if (initcall_run_list(init_sequence_f))  //顺序执行init_sequence_f 中函数
 		hang();
 
 #if !defined(CONFIG_ARM) && !defined(CONFIG_SANDBOX)

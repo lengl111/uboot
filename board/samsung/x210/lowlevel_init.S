@@ -24,44 +24,44 @@
 
 	.globl lowlevel_init
 lowlevel_init:
-	mov	r11, lr
+	mov	r11, lr  @r11 = lr
 
 	/* r5 has always zero */
-	mov	r5, #0
+	mov	r5, #0  @r5 = 0
 
-	ldr	r7, =S5PC100_GPIO_BASE
-	ldr	r8, =S5PC100_GPIO_BASE
+	ldr	r7, =S5PC100_GPIO_BASE  @r7=0xE0300000 这个是s5pc100的地址
+	ldr	r8, =S5PC100_GPIO_BASE  @r8=0xE0300000
 	/* Read CPU ID */
-	ldr	r2, =S5PC110_PRO_ID
-	ldr	r0, [r2]
+	ldr	r2, =S5PC110_PRO_ID  @r2=0xE0000000
+	ldr	r0, [r2]    @s5pv210 默认读到 r0 = 0x43110020
 	mov	r1, #0x00010000
-	and	r0, r0, r1
-	cmp	r0, r5
+	and	r0, r0, r1  @ r0 = 1  这里判断出我们的芯片不是s5pc100
+	cmp	r0, r5 @ 不等于0
 	beq	100f
-	ldr	r8, =S5PC110_GPIO_BASE
+	ldr	r8, =S5PC110_GPIO_BASE  @r8 = 0xE0200000 c110的GPIO_BASE 与v210的一样
 100:
 	/* Turn on KEY_LED_ON [GPJ4(1)] XMSMWEN */
-	cmp	r7, r8
+	cmp	r7, r8   @不相等
 	beq	skip_check_didle			@ Support C110 only
 
-	ldr	r0, =S5PC110_RST_STAT
+	ldr	r0, =S5PC110_RST_STAT  @r0 = 0xE010A000 复位状态寄存器
 	ldr	r1, [r0]
-	and	r1, r1, #0x000D0000
-	cmp	r1, #(0x1 << 19)			@ DEEPIDLE_WAKEUP
+	and	r1, r1, #0x000D0000  
+	cmp	r1, #(0x1 << 19)			@ DEEPIDLE_WAKEUP 排除cpu是从deepidle 唤醒的
 	beq	didle_wakeup
 	cmp	r7, r8
 
 skip_check_didle:
 	addeq	r0, r8, #0x280				@ S5PC100_GPIO_J4
-	addne	r0, r8, #0x2C0				@ S5PC110_GPIO_J4
+	addne	r0, r8, #0x2C0				@ S5PC110_GPIO_J4 不等于
 	ldr	r1, [r0, #0x0]				@ GPIO_CON_OFFSET
 	bic	r1, r1, #(0xf << 4)			@ 1 * 4-bit
-	orr	r1, r1, #(0x1 << 4)
+	orr	r1, r1, #(0x1 << 4)               @GPIOJ4_1 设置为输出
 	str	r1, [r0, #0x0]				@ GPIO_CON_OFFSET
 
 	ldr	r1, [r0, #0x4]				@ GPIO_DAT_OFFSET
 	bic	r1, r1, #(1 << 1)
-	str	r1, [r0, #0x4]				@ GPIO_DAT_OFFSET
+	str	r1, [r0, #0x4]				@ GPIO_DAT_OFFSET GPIOJ4_1 输出高电平
 
 	/* Don't setup at s5pc100 */
 	beq	100f
@@ -85,7 +85,7 @@ skip_check_didle:
 	 *	0xF1F0_0000
 	 *	0xFAF0_0000
 	 */
-	ldr     r0, =0xe0f00000
+	ldr     r0, =0xe0f00000 @这10个ASYNC_CONFIG 是和clock domains相关的,规格书推荐full模式，就是清0，更稳定.
 	ldr     r1, [r0]
 	bic     r1, r1, #0x1
 	str     r1, [r0]
@@ -144,7 +144,7 @@ skip_check_didle:
 	 * Diable ABB block to reduce sleep current at low temperature
 	 * Note that it's hidden register setup don't modify it
 	 */
-	ldr	r0, =0xE010C300
+	ldr	r0, =0xE010C300  @这个寄存器没有开放，我们不管
 	ldr	r1, =0x00800000
 	str	r1, [r0]
 
@@ -162,12 +162,12 @@ skip_check_didle:
 	/* Disable Watchdog */
 	ldreq	r0, =S5PC100_WATCHDOG_BASE		@ 0xEA200000
 	ldrne	r0, =S5PC110_WATCHDOG_BASE		@ 0xE2700000
-	str	r5, [r0]
+	str	r5, [r0] @关闭看门狗
 
 	/* setting SRAM */
 	ldreq	r0, =S5PC100_SROMC_BASE
-	ldrne	r0, =S5PC110_SROMC_BASE
-	ldr	r1, =0x9
+	ldrne	r0, =S5PC110_SROMC_BASE  @0xE8000000
+	ldr	r1, =0x9  @默认值
 	str	r1, [r0]
 
 	/* S5PC100 has 3 groups of interrupt sources */
