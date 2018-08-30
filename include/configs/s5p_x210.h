@@ -24,6 +24,14 @@
 #define CONFIG_DISPLAY_CPUINFO
 #define CONFIG_DISPLAY_BOARDINFO
 
+/* Boot select configuration */
+
+#define BOOT_ONENAND        0x1
+#define BOOT_NAND           0x2
+#define BOOT_MMCSD          0x3
+#define BOOT_NOR            0x4
+#define BOOT_SEC_DEV        0x5
+
 /* input clock of PLL: has 24MHz input clock at S5PC110 */
 #define CONFIG_SYS_CLK_FREQ_C110	24000000
 

@@ -9,4 +9,6 @@
 #
 
 obj-y	:= x210.o onenand.o
-obj-y	+= lowlevel_init.o
+extra-y	+= lowlevel_init.o
+extra-y	+= mem_setup.o
+extra-y	+= nand_cp.o
