@@ -195,8 +195,8 @@ skip_check_didle:
 	/*根据当前pc是否在DDR中运行，然后要不要初始化DDR */
 	ldr r0, =0xff000fff
 	bic r1, pc, r0      /* r1 <- current base addr of code execute*/
-    ldr r2, _TEXT_BASE      /* r2 <- original base addr in ram */
-    bic r2, r2, r0      /* r2 <- link base addr of code */
+    	ldr r2, =CONFIG_SYS_TEXT_BASE      /* r2 <- original base addr in ram */
+    	bic r2, r2, r0      /* r2 <- link base addr of code */
 	cmp     r1, r2      /* compare r1, r2 */
 	beq     1f          /* r1 == r2, 则不需要初始内存，否则需要初始化内存，并拷贝代码到内存*/ 
 

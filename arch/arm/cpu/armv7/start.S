@@ -31,6 +31,9 @@
  *
  *************************************************************************/
 
+_TEXT_PHY_BASE:
+	.word	CONFIG_SYS_TEXT_BASE
+
 	.globl	reset
 
 reset:
@@ -284,7 +287,7 @@ ENTRY(copy_from_nand)
 	mov	r9, r0
 	mov	r9, #0x100		/* Compare about 8KB */
 	bl	copy_uboot_to_ram
-	tst		r0, #0x0
+	tst	r0, #0x0
 	bne	copy_failed
 
 	ldr	r0, =0xd0020000

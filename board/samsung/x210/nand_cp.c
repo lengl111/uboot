@@ -38,12 +38,17 @@
 
 #include <common.h>
 
-#ifdef CONFIG_S5PC11X
-#include <asm/io.h>
+#ifdef CONFIG_S5PV210
+//#include <asm/io.h>
 #include <linux/mtd/nand.h>
-#include <regs.h>
+#include <asm/arch/s5pc110.h>
+//#include <regs.h>
 
+#define NAND_ENABLE_CE()        (NFCMD_REG &= ~(1 << 1))
+#define NAND_DISABLE_CE()       (NFCMD_REG |= (1 << 1))
 #define NAND_CONTROL_ENABLE()	(NFCONT_REG |= (1 << 0))
+
+#define NF_TRANSRnB()   do {while(!(NFSTAT_REG & (1 << 0)));} while(0)
 
 #if defined(CONFIG_SECURE_BOOT)
 #include <secure_boot.h>
@@ -140,7 +145,6 @@ static int nandll_read_blocks (ulong dst_addr, ulong size)
 
 int copy_uboot_to_ram (void)
 {
-	int large_block = 0;
 	int i;
 	vu_char id;
 
@@ -156,13 +160,11 @@ int copy_uboot_to_ram (void)
 	id = NFDATA8_REG;
 	id = NFDATA8_REG;
 
-	if (id > 0x80)
-		large_block = 1;
-	else
+	if (id <= 0x80)
 		return -1;	// Do not support small page (512B) any more
 
 	/* read NAND blocks */
-	rv = nandll_read_blocks(CFG_PHY_UBOOT_BASE, COPY_BL2_SIZE);
+	rv = nandll_read_blocks(CONFIG_SYS_TEXT_BASE, COPY_BL2_SIZE);
 
 #if defined(CONFIG_SECURE_BOOT)
 	rv = Check_Signature((SecureBoot_CTX *)SECURE_BOOT_CONTEXT_ADDR,

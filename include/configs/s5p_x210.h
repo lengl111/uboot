@@ -32,6 +32,11 @@
 #define BOOT_NOR            0x4
 #define BOOT_SEC_DEV        0x5
 
+/* nand copy size from nand to DRAM */
+#define COPY_BL1_SIZE       0x2000   /* 8KB */
+#define COPY_BL2_SIZE       0x80000   /* 512KB */
+
+
 /* input clock of PLL: has 24MHz input clock at S5PC110 */
 #define CONFIG_SYS_CLK_FREQ_C110	24000000
 
@@ -237,6 +242,25 @@
 
 #define CONFIG_SYS_MONITOR_BASE		0x00000000
 #define CONFIG_SYS_MONITOR_LEN		(256 << 10)	/* 256 KiB */
+
+
+#define DMC0_MEMCONTROL     0x00202400  
+#define DMC0_MEMCONFIG_0    0x30F00313  // MemConfig0   256MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
+#define DMC0_MEMCONFIG_1    0x00F00313  // MemConfig1 (2016-10-12 20:19:53 zxd modify)
+#define DMC0_TIMINGA_REF    0x00000618  // TimingAref   7.8us*133MHz=1038(0x40E), 100MHz=780(0x30C), 20MHz=156(0x9C), 10MHz=78(0x4E)
+#define DMC0_TIMING_ROW     0x28233287  // TimingRow    for @200MHz
+#define DMC0_TIMING_DATA    0x23240304  // TimingData   CL=3
+#define DMC0_TIMING_PWR     0x09C80232  // TimingPower
+ 
+#define DMC1_MEMCONTROL     0x00202400  // MemControl   BL=4, 2 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
+#define DMC1_MEMCONFIG_0    0x40F00313  // MemConfig0   512MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
+#define DMC1_MEMCONFIG_1    0x00F00313  // MemConfig1 (2016-10-12 20:19:53 zxd modify)
+#define DMC1_TIMINGA_REF    0x00000618  // TimingAref   7.8us*133MHz=1038(0x40E), 100MHz=780(0x30C), 20MHz=156(0x9C), 10MHz=78(0x4
+#define DMC1_TIMING_ROW     0x28233289  // TimingRow    for @200MHz
+#define DMC1_TIMING_DATA    0x23240304  // TimingData   CL=3
+#define DMC1_TIMING_PWR     0x08280232  // TimingPower
+
+ 
 
 /* FLASH and environment organization */
 #define CONFIG_MMC_DEFAULT_DEV	0

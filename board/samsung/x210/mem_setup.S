@@ -1,4 +1,5 @@
 #include <config.h>
+#include <asm/arch/s5pc110.h>
 
 	.globl mem_ctrl_asm_init
 mem_ctrl_asm_init:

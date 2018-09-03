@@ -28,6 +28,9 @@
 #ifndef __S5PC110_H__
 #define __S5PC110_H__
 
+#define  __REG(x)     (*(volatile unsigned int *) (x))
+#define  __REGb(x)     (*(volatile unsigned char *) (x))
+
 #ifndef CONFIG_S5PC110
 #define CONFIG_S5PC110			1
 #endif
@@ -1770,7 +1773,9 @@ typedef enum {
 #define GINTSTS_USBSusp		(1<<11)
 #define GINTSTS_RXFLvl		(1<<4)
 
+#if 0
 /* include common stuff */
+
 #ifndef __ASSEMBLY__
 static inline S5PC11X_MEMCTL * S5PC11X_GetBase_MEMCTL(void)
 {
@@ -1829,12 +1834,14 @@ static inline S5PC11X_SPI * S5PC11X_GetBase_SPI(void)
 	return (S5PC11X_SPI *)ELFIN_SPI_BASE;
 }
 
+
 #else /* #ifndef __ASSEMBLY__ */
 
 /* LCD controller */
 #define LCDBGCON_OFFSET		0x5c
 
 #endif /* #ifndef __ASSEMBLY__ */
+#endif
 
 /* PENDING BIT */
 #define BIT_EINT0			(0x1)

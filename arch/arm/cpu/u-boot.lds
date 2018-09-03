@@ -22,6 +22,9 @@ SECTIONS
 		*(.__image_copy_start)
 		*(.vectors)
 		CPUDIR/start.o (.text*)
+		board/samsung/x210/lowlevel_init.o (.text*)
+		board/samsung/x210/mem_setup.o (.text*)
+		board/samsung/x210/nand_cp.o (.text*)
 		*(.text*)
 	}
 
